@@ -12,3 +12,5 @@ Create, expand, compacting, differencing and merge VHDX (Virtual Hard Disk v2) f
 
 ## Notes
 A fully merge operation on above sisuation will reserve the `<vhdName>_v{M+1}.vhdx` file and rename it to `<vhdName>_v{M+1}_archived.vhdx`.
+
+Thanks [BitLocker encrypted vhd "containers" from PowerShell - github](https://github.com/neil-sabol/bitlocker-encrypted-vhd-from-batch-or-powershell) and [Matt's escalation method - stackoverflow](https://stackoverflow.com/questions/7044985/how-can-i-auto-elevate-my-batch-file-so-that-it-requests-from-uac-administrator) !
