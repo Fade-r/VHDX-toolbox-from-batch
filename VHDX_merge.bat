@@ -2,47 +2,7 @@
 cls
 
 :init
-setlocal DisableDelayedExpansion
-set cmdInvoke=1
-set winSysFolder=System32
-set "batchPath=%~dpnx0"
-for %%k in (%0) do set batchName=%%~nk
-set "vbsGetPrivileges=%temp%\OEgetPriv_%batchName%.vbs"
 setlocal EnableDelayedExpansion
-
-:checkPrivileges
-net file 1>nul 2>nul
-if '%errorlevel%' == '0' ( goto gotPrivileges ) else ( goto getPrivileges )
-
-:getPrivileges
-if '%1'=='ELEV' (echo ELEV & shift /1 & goto gotPrivileges)
-echo.
-echo **************************************
-echo Invoking UAC for Privilege Escalation
-echo **************************************
-
-echo Set UAC = CreateObject^("Shell.Application"^) > "%vbsGetPrivileges%"
-echo args = "ELEV " >> "%vbsGetPrivileges%"
-echo For Each strArg in WScript.Arguments >> "%vbsGetPrivileges%"
-echo args = args ^& strArg ^& " "  >> "%vbsGetPrivileges%"
-echo Next >> "%vbsGetPrivileges%"
-
-if '%cmdInvoke%'=='1' goto InvokeCmd 
-
-echo UAC.ShellExecute "!batchPath!", args, "", "runas", 1 >> "%vbsGetPrivileges%"
-goto ExecElevation
-
-:InvokeCmd
-echo args = "/c """ + "!batchPath!" + """ " + args >> "%vbsGetPrivileges%"
-echo UAC.ShellExecute "%SystemRoot%\%winSysFolder%\cmd.exe", args, "", "runas", 1 >> "%vbsGetPrivileges%"
-
-:ExecElevation
-"%SystemRoot%\%winSysFolder%\WScript.exe" "%vbsGetPrivileges%" %*
-exit /B
-
-:gotPrivileges
-setlocal & cd /d %~dp0
-if '%1'=='ELEV' (del "%vbsGetPrivileges%" 1>nul 2>nul & shift /1)
 
 echo ---------------------------------------------------------------------
 echo This script helps you merge VDHX files. Original files will be reserved.
@@ -76,18 +36,19 @@ set "minVersion=99"
 for %%F in ("%vhdPath%%vhdName%_v*.vhdx") do (
     set "filename=%%~nF"
     set "version=!filename:*%vhdName%_v=!"
-    if !version! gtr !maxVersion! (
-        set "maxVersion=!version!"
-    )
-    if !version! lss !minVersion! (
-        set "minVersion=!version!"
+    echo !version!| findstr "archived" >nul || (
+        if !version! gtr !maxVersion! (
+            set "maxVersion=!version!"
+        )
+        if !version! lss !minVersion! (
+            set "minVersion=!version!"
+        )
     )
 )
 set /a "version=%maxVersion%+1"
 
 :Main
-if %depth%==-1 (set /a depth=%version%-%minVersion% & set fully=1)^
-else (set fully=0)
+if %depth%==-1 (set /a "depth=%version%-%minVersion%" & set fully=1) else (set fully=0)
 set /a "bakVersion=%version%-%depth%"
 if %fully%==1 copy "%vhdPath%%vhdName%_v%bakVersion%.vhdx" "%vhdName%_v%bakVersion%_bak.vhdx"
 echo SELECT VDISK FILE="%vhdPath%%vhdName%.vhdx" > diskpart.txt
